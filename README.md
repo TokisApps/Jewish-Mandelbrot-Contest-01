@@ -1,0 +1,1 @@
+# Jewish-Mandelbrot-Contest-01
