@@ -45,7 +45,7 @@ struct Instrument {
 
 			sample /= rands[10] + rands[11] + rands[12] + rands[13] + rands[14] + rands[15];
 			
-			sample *= (2 + cos(a * 0.1 * x * i * (rands[50] * 0.3 + 0.7) + M_PI * 2 * rands[51])) / 3;
+			sample *= (2 + cos(a * 0.1 * x * i * (rands[50] * 0.3 + 0.7))) / 3;
 			//sample *= (atan(20.0 * (rands[2] * 0.7 + 0.3) * i / 44100.0 - 0.1 * (rands[3] * 0.5 + 0.5)) + M_PI_2) / M_PI;
 			xs[i] = sample;
 		}
@@ -66,6 +66,7 @@ struct Instrument {
 
 		for(int i = 0;i < length && i + offset < songLength;++i) {
 			float f = (-atan(30.0 * (rands[0] * 0.7 + 0.3) * (0.1 + (i - length) / 44100.0)) + M_PI_2) / M_PI;
+			f = 1.0;
 			buffers[0][i + offset] += vol * left * xs[i] / mx * f;
 			buffers[1][i + offset] += vol * right * xs[i] / mx * f;
 		}
@@ -117,7 +118,7 @@ struct Pattern : Instrument {
 	}
 	
 	void render(float *buffers[2],int offset,int length) {
-		Instrument::render(5,scale[tone] - 12,buffers,offset,length);
+		Instrument::render(3,scale[tone] - 12,buffers,offset,length);
 	}
 };
 
@@ -142,7 +143,7 @@ struct Melody : Instrument {
 		}
 		if(tone < 0) tone = 0;
 		if(tone >= nscale) tone = nscale - 1;
-		Instrument::render(0.8,scale[tone],buffers,offset,lengthFactor * sampleRate / 6.0 * (1.0 + rand() % 3));
+		Instrument::render(1,scale[tone],buffers,offset,lengthFactor * sampleRate / 6.0 * (1.0 + rand() % 3));
 		prev = tone;
 	}
 };
@@ -191,7 +192,7 @@ int main() {
 	float *buffers[2] = {new float[songLength],new float[songLength]};
 	
 	makeScale();
-	BPM = 90 + (rand() % 20);
+	BPM = 90 + (rand() % 10);
 
 
 	Pattern pats[4];
@@ -205,7 +206,7 @@ int main() {
 
 		for(int j = 0;j < sizeof(mels) / sizeof(mels[0]);++j)
 			if(rand() % 100 < 40 / (j + 1))
-				mels[j].render(buffers,i + rand() % 1000,0.25 * (j / 2) + 1.0);
+				mels[j].render(buffers,i + rand() % 1000,0.2 * (j / 2) + 1.0);
 
 		int k2 = i / sampleRate / 15;
 		if(k2 != k) {
