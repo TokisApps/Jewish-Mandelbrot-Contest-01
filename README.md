@@ -1,5 +1,7 @@
 # Jewish-Mandelbrot-Contest-01
 
+Zero Knpwledge
+
 One approach versus Software Manipulation
 
 Beyond all bottom and top RootKits
