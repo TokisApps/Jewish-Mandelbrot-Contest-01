@@ -1,5 +1,5 @@
 #!/bin/sh
 
-gensent | trans de:en -b | trans en:de -b
+generateSentence.exe | trans de:en -b | trans en:de -b
 
 
