@@ -2,7 +2,8 @@
 
 echo "const char *source[] = {" > src.hpp
 
-for x in $*; do
+for y in ${*%.cpp}; do
+	x=$y.cpp
 	if [ -f $x ]; then
 		cat $x | sed -e "s/\\\"/\\\\\"/g" | sed -e "s/.*/\"\0\", /" >> src.hpp
 		cat $x | sed -e "s/\<srand(.*)/_srand()/g" > tmp.cpp
