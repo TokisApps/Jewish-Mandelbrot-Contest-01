@@ -7,17 +7,19 @@ extern "C" { void _srand(); }
 
 using namespace std;
 
-const int sampleRate = 44100;
-const int songLength = sampleRate * 120;
+const long long sampleRate = 44100;
+const long long songLength = sampleRate * 120;
 
 inline float mypow(float x,float y) {
 	return pow(abs(x),y) * (x < 0 ? -1 : 1);
 }
 
+const long long TONES_PER_OCTAVE = 12;
+
 struct Instrument {
 	float left;
 	float right;
-	float rands[1000];
+	float rands[44100];
 	float a;
 	
 	Instrument(float a) {
@@ -25,50 +27,54 @@ struct Instrument {
 		left = (float)rand() / (float)RAND_MAX;
 		right = 1.0 - left;
 		
-		for(int i = 0;i < 1000;++i) rands[i] = (float)rand() / (float)RAND_MAX;
+		const long long m = 16;
+		float r1[m];
+		for(long long i = 0;i < m;++i) r1[i] = (float)rand() / (float)RAND_MAX - 0.5;
+		
+		float max = -100000;
+		float min = 100000;
+		for(long long i = 0;i < m;++i) if(r1[i] > max) max = r1[i]; 
+		for(long long i = 0;i < m;++i) if(r1[i] < min) min = r1[i]; 
+		for(long long i = 0;i < m;++i) r1[i] = 2 * ((r1[i] - min) / (max - min) - 0.5);
+
+		for(long long k = 0;k < 0;++k) {
+			float r2[m];
+			for(long long i = 0;i < m;++i) {
+				r2[i] = 0;	
+				for(long long j = 0;j < m;++j) r2[i] += r1[i] * r1[m - j - 1];
+			}
+
+			float max = 0;
+			for(long long i = 0;i < m;++i) if(abs(r2[i]) > max) max = abs(r2[i]); 
+			for(long long i = 0;i < m;++i) r1[i] = r2[i] / max;
+		}
+
+		const long long n = sizeof(rands) / sizeof(*rands) / m;
+		for(long long i = 0;i < sizeof(rands) / sizeof(*rands);++i) {
+			long long j = i / n;
+			long long k = i % n;
+			rands[i] = (k * r1[j + 1] / n) + ((n - k) * r1[j] / n);
+		}
+
+		for(long long i = 0;i < m;++i) cout << r1[i] << " ";
+		cout << endl << endl << "********************" << endl << endl;
 	}
 	
-	void render(float vol,int tone,float *buffers[2],int offset,int length) {
-		float x = 441.0 / sampleRate * M_PI * pow(2.0,tone / 12.0);
+	void render(float vol,long long tone,float *buffers[2],long long offset,long long length) {
+		float y = pow(2.0,tone / (float)TONES_PER_OCTAVE);
+		float x = 441.0 / sampleRate * M_PI * y;
 	
 		float xs[length];
-		for(int i = 0;i < length;++i) xs[i] = 0;
+		for(long long i = 0;i < length;++i) xs[i] = 0;
 		
-		for(int i = 0;i < length;++i) {
-			float sample = 
-				rands[10] * sin(i * x)
-				+ rands[11] * mypow(sin(i * x),2)
-				+ rands[12] * mypow(sin(i * x),0.5)
-				+ rands[13] * sin(i * x / 2)
-				+ rands[14] * mypow(sin(i * x / 2),2)
-				+ rands[15] * mypow(sin(i * x / 2),0.5);
-
-			sample /= rands[10] + rands[11] + rands[12] + rands[13] + rands[14] + rands[15];
-			
-			sample *= (2 + cos(a * 0.1 * x * i * (rands[50] * 0.3 + 0.7))) / 3;
-			//sample *= (atan(20.0 * (rands[2] * 0.7 + 0.3) * i / 44100.0 - 0.1 * (rands[3] * 0.5 + 0.5)) + M_PI_2) / M_PI;
-			xs[i] = sample;
+		for(long long i = 0;i < length;++i) {
+			long long j = (long long)round(32 * i * y * sizeof(rands) / sizeof(*rands) / length);
+			xs[i] = (rands[j % (sizeof(rands) / sizeof(*rands))] * 0.1 + 0.9) * sin(x*i);
 		}
 		
-		float mx = -100000;
-		const int n = 50;
-
-		for(int i = 0;i < length - n - 1;++i) {
-			float sum = 0;
-			for(int j = 0;j < n;++j) sum += abs(xs[i + j]);
-			sum /= n;
-			
-			if(sum > mx) mx = sum;
-		}
-
-		cout << mx << " ";
-		mx = 1;
-
-		for(int i = 0;i < length && i + offset < songLength;++i) {
-			float f = (-atan(30.0 * (rands[0] * 0.7 + 0.3) * (0.1 + (i - length) / 44100.0)) + M_PI_2) / M_PI;
-			f = 1.0;
-			buffers[0][i + offset] += vol * left * xs[i] / mx * f;
-			buffers[1][i + offset] += vol * right * xs[i] / mx * f;
+		for(long long i = 0;i < length && i + offset < songLength;++i) {
+			buffers[0][i + offset] += vol * left * xs[i];
+			buffers[1][i + offset] += vol * right * xs[i];
 		}
 	}
 };
@@ -77,22 +83,39 @@ struct Instrument {
 
 
 
-const int dur[] = {0,2,4,5,7,9,11};
-const int ndur = sizeof(dur) / sizeof(dur[0]);
+const long long dur[] = {0,2,4,5,7,9,11};
+const long long ndur = sizeof(dur) / sizeof(dur[0]);
 
-int scale[16];
-int nscale = 0;
+long long scale[50];
+long long nscale = 0;
+
+void makeScale2() {
+	long long k = rand() % 5 + 5;
+	nscale = 0;
+	for(long long i = 0;i < sizeof(scale) / sizeof(scale[0]);++i) {
+		scale[i] = k;
+		if(scale[i] > 1.5 * TONES_PER_OCTAVE) break;
+		cout << scale[i] << " ";
+		nscale += 1;
+
+		if(rand() % 100 < 33)
+			k += 1;
+		else
+			k += 2;
+	}
+	cout << endl;
+}
 
 void makeScale() {
-	int k = rand() % ndur;
-	int k0 = k;
-	int j = 0;
-	int bias = (rand() % 5) + 5;
+	long long k = rand() % ndur;
+	long long k0 = k;
+	long long j = 0;
+	long long bias = (rand() % 5) + 5;
 	nscale = 0;
 	
-	for(int i = 0;i < sizeof(scale) / sizeof(scale[0]);++i) {
+	for(long long i = 0;i < sizeof(scale) / sizeof(scale[0]);++i) {
 		scale[i] = dur[k] + j + bias - dur[k0];
-		if(scale[i] > 24) break;
+		if(scale[i] > 34) break;
 		cout << scale[i] << " ";
 
 		nscale += 1;
@@ -109,7 +132,7 @@ void makeScale() {
 
 
 struct Pattern : Instrument {
-	int tone;
+	long long tone;
 	
 	Pattern() : Instrument((4.0 * rand()) / RAND_MAX + 2.92){
 		tone = rand() % (nscale / 2);
@@ -117,14 +140,14 @@ struct Pattern : Instrument {
 		//rands[1] = 0;
 	}
 	
-	void render(float *buffers[2],int offset,int length) {
+	void render(float *buffers[2],long long offset,long long length) {
 		Instrument::render(3,scale[tone] - 12,buffers,offset,length);
 	}
 };
 
 
 struct Melody : Instrument {
-	int prev;
+	long long prev;
 	
 	Melody() : Instrument((0.2 * rand() * rand()) / RAND_MAX / RAND_MAX + 0.01) {
 		prev = scale[rand() % ndur];
@@ -132,9 +155,9 @@ struct Melody : Instrument {
 		//rands[1] = 1;
 	}
 	
-	void render(float *buffers[2],int offset,float lengthFactor) {
-		int tone = prev;
-		int k = rand() % 4;
+	void render(float *buffers[2],long long offset,float lengthFactor) {
+		long long tone = prev;
+		long long k = rand() % 4;
 		switch(k) {
 			case 0: tone = rand() % nscale;break;
 			case 1: tone = prev;break;
@@ -171,7 +194,7 @@ typedef struct WAV_HEADER {
 
 
 
-int BPM = 90 + (rand() % 20);
+long long BPM = 90 + (rand() % 20);
 
 
 
@@ -180,7 +203,7 @@ int main() {
 	
 	static_assert(sizeof(wav_hdr) == 44, "");
 
-	int fsize = songLength * 4;
+	long long fsize = songLength * 4;
 
 	wav_hdr wav;
 	wav.ChunkSize = fsize + sizeof(wav_hdr) - 8;
@@ -191,36 +214,37 @@ int main() {
 
 	float *buffers[2] = {new float[songLength],new float[songLength]};
 	
-	makeScale();
+	makeScale2();
 	BPM = 90 + (rand() % 10);
 
 
 	Pattern pats[4];
 	Melody mels[6];
-	int k = 0;
+	long long k = 0;
 
-	for(int i = 0;i < songLength;i += sampleRate * 60 / BPM / 4) {
-		for(int j = 0;j < sizeof(pats) / sizeof(pats[0]);++j)
-			if(rand() % 100 < 30 )
+	for(long long i = 0;i < songLength;i += sampleRate * 60 / BPM / 4) {
+		/*
+		for(long long j = 0;j < sizeof(pats) / sizeof(pats[0]);++j)
+			if(rand() % 100 < 20 )
 				pats[j].render(buffers,i + rand() % 1000,sampleRate / 5);
+*/
+		for(long long j = 0;j < sizeof(mels) / sizeof(mels[0]);++j)
+			if(rand() % 100 < 40 / pow(j + 1,0.1))
+				mels[j].render(buffers,i + rand() % 1000,1.0);
 
-		for(int j = 0;j < sizeof(mels) / sizeof(mels[0]);++j)
-			if(rand() % 100 < 40 / (j + 1))
-				mels[j].render(buffers,i + rand() % 1000,0.2 * (j / 2) + 1.0);
-
-		int k2 = i / sampleRate / 15;
+		long long k2 = i / sampleRate / 15;
 		if(k2 != k) {
 			k = k2;
-			makeScale();
+			makeScale2();
 		}
 	}
 	
 	int16_t d;
-	for (int i = 0; i < songLength; ++i) {
+	for (long long i = 0; i < songLength; ++i) {
 		d = buffers[0][i] * 1000.0;	
 		out.write(reinterpret_cast<char *>(&d), sizeof(int16_t));
 	//}
-	//for (int i = 0; i < songLength; ++i) {
+	//for (long long i = 0; i < songLength; ++i) {
 		d = buffers[1][i] * 1000.0;	
 		out.write(reinterpret_cast<char *>(&d), sizeof(int16_t));
 	}

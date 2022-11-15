@@ -1,3 +1,3 @@
 %.exe : %.cpp
-	gxff.sh -O3 $? -lstdc++ -o $@
+	gxff.sh -O3 $? -lstdc++ -o $@ -lm
 
