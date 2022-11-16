@@ -2,20 +2,22 @@
 
 echo "const char *source[] = {" > src.hpp
 
+for z in srand rand; do
 for y in ${*%.cpp}; do
 	x=$y.cpp
 	if [ -f $x ]; then
 		cat $x | sed -e "s/\\\"/\\\\\"/g" | sed -e "s/.*/\"\0\", /" >> src.hpp
-		cat $x | sed -e "s/\<srand(.*)/_srand()/g" > tmp.cpp
+		cat $x | sed -re "s/\<$z[(][^)]*[)]/_$z()/g" > tmp.cpp
 		cat tmp.cpp > $x
-		if grep -c "\<_srand()" $x; then
-		if ! grep -c "extern.*\<_srand()" $x; then
-			echo "extern \"C\" { void _srand(); }" > tmp.cpp
+		if grep -c "\<_$z()" $x; then
+		if ! grep -c "extern.*\<_$z()" $x; then
+			echo "extern \"C\" { long long _$z(); }" > tmp.cpp
 			cat $x >> tmp.cpp
 			cat tmp.cpp > $x
 		fi
 		fi
 	fi
+done
 done
 
 echo "};" >> src.hpp
@@ -45,7 +47,32 @@ using namespace std;
 
 extern "C" {
 
-void _srand() {
+static unsigned long long randseed = 0;
+
+long long _rand() {
+	//cout << "**** bit shuffle ***** (rs : " << randseed << ")" << endl;
+
+	for(int k = 0;k < 10;++k) {
+		unsigned long long x = 0;
+		const int n = sizeof(randseed) * 8;
+		/*for(long long i = 0;i < n;++i) {
+			x |= ((long long)(randseed >> (long long)(n - i - 1)) & 1LL) << i;
+		}*/
+		x = randseed;
+		int m = (x % n) / 2;
+		if(m == 0) m = 1;
+		for(long long i = 0;i < m;++i) {
+			unsigned long long b = randseed & 1LL;
+			randseed >>= 1LL;
+			randseed |= b << (long long)(n - 2LL);
+		}
+		randseed ^= x;
+		//cout << "rs : " << randseed << " x : " << x << endl;
+	}
+	return randseed % ((long long)RAND_MAX + 1LL);
+}
+
+long long _srand() {
 	Display *display = XOpenDisplay(NULL);
 	Window rootWindow = RootWindow(display, DefaultScreen(display));    
 	XWindowAttributes attrs;
@@ -54,8 +81,8 @@ void _srand() {
 
 	stringstream ss;
 	ss << "Image { width : " << attrs.width << "; height : " << attrs.height << ";32bit ??;} = {";
-	for (int i = 0; i < attrs.height; ++i) {
-		for (int j = 0; j < attrs.width; ++j) {
+	for (long long i = 0; i < attrs.height; ++i) {
+		for (long long j = 0; j < attrs.width; ++j) {
 			ss << XGetPixel(image, j, i);
 		}
 	}
@@ -68,7 +95,7 @@ void _srand() {
 		.channels = 2
 	};
 	pa_simple *_s = NULL;
-	int ret = 1;
+	long long ret = 1;
 	int error;
 
 	/* Create the recording stream */
@@ -77,7 +104,7 @@ void _srand() {
 	}
 
 	ss << "Audio Data = { ";
-	for (int i = 0;i < 44;++i) {
+	for (long long i = 0;i < 44;++i) {
 		uint8_t buf[BUFSIZE];
 
 		/* Record some data ... */
@@ -85,26 +112,29 @@ void _srand() {
 		    fprintf(stderr, __FILE__": pa_simple_read() failed: %s\n", pa_strerror(error));
 		}
 
-		for(int j = 0;j < BUFSIZE;++j) ss << (long long)buf[j] << " , ";
+		for(long long j = 0;j < BUFSIZE;++j) ss << (long long)buf[j] << " , ";
 		ss << endl;
 	}
 	ss << "}" << endl;
 	ss << "Source = { " << endl;
-	for(int i = 0;i < sizeof(source) / sizeof(source[0]);++i)
+	for(long long i = 0;i < sizeof(source) / sizeof(source[0]);++i)
 		ss << source[i] << endl;
 	ss << "}" << endl;
 
 	ss << "TimeStamp = " << time(0) << endl;
 	unsigned char result[MD5_DIGEST_LENGTH + 10];
 
-	for(int i = 0;i < MD5_DIGEST_LENGTH + 5;++i) result[ i ] = 0;
+	for(long long i = 0;i < MD5_DIGEST_LENGTH + 5;++i) result[ i ] = 0;
 	MD5((const unsigned char *)ss.str().c_str(),ss.str().size(),result);
 
-	unsigned int *xy = (unsigned int *)result;
-	unsigned int ab = 0;
+	unsigned long long *xy = (unsigned long long *)result;
+	unsigned long long ab = 0;
 	while(*xy) {ab ^= *xy;xy++;}
 
-	srand(ab);
+	randseed = ab;
+	cout << "seed : " << randseed << endl;
+
+	return 0;
 }
 }
 

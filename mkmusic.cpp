@@ -1,5 +1,5 @@
-extern "C" { void _srand(); }
-
+extern "C" { long long _rand(); }
+extern "C" { long long _srand(); }
 
 #include <fstream>
 #include <iostream>
@@ -24,12 +24,12 @@ struct Instrument {
 	
 	Instrument(float a) {
 		this->a = a;
-		left = (float)rand() / (float)RAND_MAX;
+		left = (float)_rand() / (float)RAND_MAX;
 		right = 1.0 - left;
 		
 		const long long m = 16;
 		float r1[m];
-		for(long long i = 0;i < m;++i) r1[i] = (float)rand() / (float)RAND_MAX - 0.5;
+		for(long long i = 0;i < m;++i) r1[i] = (float)_rand() / (float)RAND_MAX - 0.5;
 		
 		float max = -100000;
 		float min = 100000;
@@ -90,7 +90,7 @@ long long scale[50];
 long long nscale = 0;
 
 void makeScale2() {
-	long long k = rand() % 5 + 5;
+	long long k = _rand() % 5 + 5;
 	nscale = 0;
 	for(long long i = 0;i < sizeof(scale) / sizeof(scale[0]);++i) {
 		scale[i] = k;
@@ -98,7 +98,7 @@ void makeScale2() {
 		cout << scale[i] << " ";
 		nscale += 1;
 
-		if(rand() % 100 < 33)
+		if(_rand() % 100 < 33)
 			k += 1;
 		else
 			k += 2;
@@ -107,10 +107,10 @@ void makeScale2() {
 }
 
 void makeScale() {
-	long long k = rand() % ndur;
+	long long k = _rand() % ndur;
 	long long k0 = k;
 	long long j = 0;
-	long long bias = (rand() % 5) + 5;
+	long long bias = (_rand() % 5) + 5;
 	nscale = 0;
 	
 	for(long long i = 0;i < sizeof(scale) / sizeof(scale[0]);++i) {
@@ -134,8 +134,8 @@ void makeScale() {
 struct Pattern : Instrument {
 	long long tone;
 	
-	Pattern() : Instrument((4.0 * rand()) / RAND_MAX + 2.92){
-		tone = rand() % (nscale / 2);
+	Pattern() : Instrument((4.0 * _rand()) / RAND_MAX + 2.92){
+		tone = _rand() % (nscale / 2);
 		//rands[0] = 1;
 		//rands[1] = 0;
 	}
@@ -149,24 +149,24 @@ struct Pattern : Instrument {
 struct Melody : Instrument {
 	long long prev;
 	
-	Melody() : Instrument((0.2 * rand() * rand()) / RAND_MAX / RAND_MAX + 0.01) {
-		prev = scale[rand() % ndur];
+	Melody() : Instrument((0.2 * _rand() * _rand()) / RAND_MAX / RAND_MAX + 0.01) {
+		prev = scale[_rand() % ndur];
 		//rands[0] = 0;
 		//rands[1] = 1;
 	}
 	
 	void render(float *buffers[2],long long offset,float lengthFactor) {
 		long long tone = prev;
-		long long k = rand() % 4;
+		long long k = _rand() % 4;
 		switch(k) {
-			case 0: tone = rand() % nscale;break;
+			case 0: tone = _rand() % nscale;break;
 			case 1: tone = prev;break;
 			case 2: tone = prev - 1;break;
 			case 3: tone = prev + 1;break;
 		}
 		if(tone < 0) tone = 0;
 		if(tone >= nscale) tone = nscale - 1;
-		Instrument::render(1,scale[tone],buffers,offset,lengthFactor * sampleRate / 6.0 * (1.0 + rand() % 3));
+		Instrument::render(1,scale[tone],buffers,offset,lengthFactor * sampleRate / 6.0 * (1.0 + _rand() % 3));
 		prev = tone;
 	}
 };
@@ -194,12 +194,17 @@ typedef struct WAV_HEADER {
 
 
 
-long long BPM = 90 + (rand() % 20);
+long long BPM;
 
 
 
 int main() {
 	_srand();
+
+	BPM = 90 + (_rand() % 20);
+
+	//for(int i = 0;i < 10;++i) cout << _rand() << endl;
+	//exit(0);
 	
 	static_assert(sizeof(wav_hdr) == 44, "");
 
@@ -215,7 +220,7 @@ int main() {
 	float *buffers[2] = {new float[songLength],new float[songLength]};
 	
 	makeScale2();
-	BPM = 90 + (rand() % 10);
+	BPM = 90 + (_rand() % 10);
 
 
 	Pattern pats[4];
@@ -225,12 +230,12 @@ int main() {
 	for(long long i = 0;i < songLength;i += sampleRate * 60 / BPM / 4) {
 		/*
 		for(long long j = 0;j < sizeof(pats) / sizeof(pats[0]);++j)
-			if(rand() % 100 < 20 )
-				pats[j].render(buffers,i + rand() % 1000,sampleRate / 5);
+			if(_rand() % 100 < 20 )
+				pats[j].render(buffers,i + _rand() % 1000,sampleRate / 5);
 */
 		for(long long j = 0;j < sizeof(mels) / sizeof(mels[0]);++j)
-			if(rand() % 100 < 40 / pow(j + 1,0.1))
-				mels[j].render(buffers,i + rand() % 1000,1.0);
+			if(_rand() % 100 < 40 / pow(j + 1,0.1))
+				mels[j].render(buffers,i + _rand() % 1000,1.0);
 
 		long long k2 = i / sampleRate / 15;
 		if(k2 != k) {
