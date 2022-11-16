@@ -82,9 +82,10 @@ struct Instrument {
 
 
 
-
+/*
 const long long dur[] = {0,2,4,5,7,9,11};
 const long long ndur = sizeof(dur) / sizeof(dur[0]);
+*/
 
 long long scale[50];
 long long nscale = 0;
@@ -106,6 +107,7 @@ void makeScale2() {
 	cout << endl;
 }
 
+/*
 void makeScale() {
 	long long k = _rand() % ndur;
 	long long k0 = k;
@@ -129,19 +131,20 @@ void makeScale() {
 
 	cout << endl;
 }
+*/
 
 
 struct Pattern : Instrument {
 	long long tone;
 	
 	Pattern() : Instrument((4.0 * _rand()) / RAND_MAX + 2.92){
-		tone = _rand() % (nscale / 2);
+		tone = _rand() % nscale;
 		//rands[0] = 1;
 		//rands[1] = 0;
 	}
 	
 	void render(float *buffers[2],long long offset,long long length) {
-		Instrument::render(3,scale[tone] - 12,buffers,offset,length);
+		Instrument::render(3,scale[tone] - TONES_PER_OCTAVE,buffers,offset,length);
 	}
 };
 
@@ -150,7 +153,7 @@ struct Melody : Instrument {
 	long long prev;
 	
 	Melody() : Instrument((0.2 * _rand() * _rand()) / RAND_MAX / RAND_MAX + 0.01) {
-		prev = scale[_rand() % ndur];
+		prev = scale[_rand() % nscale];
 		//rands[0] = 0;
 		//rands[1] = 1;
 	}
@@ -228,13 +231,13 @@ int main() {
 	long long k = 0;
 
 	for(long long i = 0;i < songLength;i += sampleRate * 60 / BPM / 4) {
-		/*
+		
 		for(long long j = 0;j < sizeof(pats) / sizeof(pats[0]);++j)
 			if(_rand() % 100 < 20 )
-				pats[j].render(buffers,i + _rand() % 1000,sampleRate / 5);
-*/
+				pats[j].render(buffers,i + _rand() % 1000,sampleRate / 10);
+
 		for(long long j = 0;j < sizeof(mels) / sizeof(mels[0]);++j)
-			if(_rand() % 100 < 40 / pow(j + 1,0.1))
+			if(_rand() % 100 < 40 / pow(j + 1,0.5))
 				mels[j].render(buffers,i + _rand() % 1000,1.0);
 
 		long long k2 = i / sampleRate / 15;
