@@ -1,3 +1,4 @@
+extern "C" { long long _rand(); }
 extern "C" { void _srand(); }
 #include <stdio.h>
 #include <unistd.h>
@@ -18,7 +19,7 @@ enum Tempus {Past,Present,Future};
 
 
 inline Kasus randKasus() {
-	switch((long long)rand() % 3) {
+	switch((long long)_rand() % 3) {
 		case 0: return Nominativ;
 		case 1: return Akkusativ;
 		case 2: return Genitiv;
@@ -26,14 +27,14 @@ inline Kasus randKasus() {
 }
 
 inline Numerus randNumerus() {
-	switch((long long)rand() % 2) {
+	switch((long long)_rand() % 2) {
 		case 0: return Singular;
 		case 1: return Plural;
 	}
 }
 
 inline Genus randGenus() {
-	switch((long long)rand() % 3) {
+	switch((long long)_rand() % 3) {
 		case 0: return Maskulinum;
 		case 1: return Femininum;
 		case 2: return Neutrum;
@@ -41,7 +42,7 @@ inline Genus randGenus() {
 }
 
 inline Person randPerson() {
-	switch((long long)rand() % 3) {
+	switch((long long)_rand() % 3) {
 		case 0: return First;
 		case 1: return Second;
 		case 2: return Third;
@@ -49,7 +50,7 @@ inline Person randPerson() {
 }
 
 inline Tempus randTempus() {
-	switch((long long)rand() % 3) {
+	switch((long long)_rand() % 3) {
 		case 0: return Past;
 		case 1: return Present;
 		case 2: return Future;
@@ -335,7 +336,7 @@ inline Verb verb(const TNP tnp) {
 		"woll"
 		};
 
-	const char **r = xs + ((long long)sizeof(xs) * (long long)rand() / (long long)sizeof(*xs) / (long long)RAND_MAX);
+	const char **r = xs + ((long long)sizeof(xs) * (long long)_rand() / (long long)sizeof(*xs) / (long long)RAND_MAX);
 
 	switch(tnp.tempus) {
 		case Past:
@@ -403,7 +404,7 @@ inline string article(bool direct,KNG kng, TNP tnp) {
 							case Plural: return "ihr";
 						}
 					case Akkusativ : 
-						if((long long)rand() % 2) {
+						if((long long)_rand() % 2) {
 							switch(kng.numerus) {
 								case Singular: 
 									switch(kng.genus) {
@@ -435,7 +436,7 @@ inline string article(bool direct,KNG kng, TNP tnp) {
 							}
 						}
 					case Genitiv : 
-						if((long long)rand() % 2) {
+						if((long long)_rand() % 2) {
 							switch(kng.numerus) {
 								case Singular:
 									switch(kng.genus) {
@@ -861,7 +862,7 @@ inline string adjective(bool direct,KNG kng) {
 		"zynisch"	
 	};
 
-	const char *r = xs[(long long)sizeof(xs) * (long long)rand() / (long long)sizeof(*xs) / (long long)RAND_MAX];
+	const char *r = xs[(long long)sizeof(xs) * (long long)_rand() / (long long)sizeof(*xs) / (long long)RAND_MAX];
 
 	switch(kng.kasus) {
 		case Nominativ:
@@ -1620,7 +1621,7 @@ inline string noun(bool direct,KNG kng) {
 	const char **v = xs;
 	while(*v) ++v;
 	const long n = v - xs - 1;
-	const char **r = xs + (n * (long long)rand() / (long long)RAND_MAX);
+	const char **r = xs + (n * (long long)_rand() / (long long)RAND_MAX);
 
 	switch(kng.kasus) {
 		case Nominativ:
@@ -1676,10 +1677,10 @@ inline string sentence() {
 	subjectGenitivTNP.numerus = subjectGenitivKNG.numerus;
 	objectGenitivTNP.numerus = objectGenitivKNG.numerus;
 	
-	bool subjectDirect = (long long)rand() % 2;
-	bool subjectGenitivDirect = (long long)rand() % 2;
-	bool objectDirect = (long long)rand() % 2;
-	bool objectGenitivDirect = (long long)rand() % 2;
+	bool subjectDirect = (long long)_rand() % 2;
+	bool subjectGenitivDirect = (long long)_rand() % 2;
+	bool objectDirect = (long long)_rand() % 2;
+	bool objectGenitivDirect = (long long)_rand() % 2;
 
 	//eg (KNG Konguenz)
 	//"der dicke Hund eines angestellten Fahrers geht verkrüppelt über die aufgeheizte Straße einer lässigen Partei"
