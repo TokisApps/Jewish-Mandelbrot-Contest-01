@@ -2,9 +2,9 @@
 
 Zero Knpwledge
 
-The poor man's micro hope versus for security
+The poor man's micro hope versus security
 
-by offering only manipulationg into the blue !!!
+by offering only manipulating into the blue !!!
 
 One approach versus Software Manipulation
 
