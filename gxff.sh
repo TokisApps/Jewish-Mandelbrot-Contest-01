@@ -51,25 +51,24 @@ static unsigned long long randseed = 0;
 
 long long _rand() {
 	//cout << "**** bit shuffle ***** (rs : " << randseed << ")" << endl;
+		const unsigned long long n = sizeof(randseed) * 8;
 
-	for(int k = 0;k < 10;++k) {
-		unsigned long long x = 0;
-		const int n = sizeof(randseed) * 8;
-		/*for(long long i = 0;i < n;++i) {
-			x |= ((long long)(randseed >> (long long)(n - i - 1)) & 1LL) << i;
-		}*/
-		x = randseed;
-		int m = (x % n) / 2;
-		if(m == 0) m = 1;
+	unsigned long long tmp1 = randseed;
+
+	for(int k = 0;k < 3;++k) {
+		unsigned long long x = tmp1;
+		int m = ((tmp1 + randseed) % n) - 3;
+		if(m <= 0) m = 1;
 		for(long long i = 0;i < m;++i) {
-			unsigned long long b = randseed & 1LL;
-			randseed >>= 1LL;
-			randseed |= b << (long long)(n - 2LL);
+			unsigned long long b = x & 1ULL;
+			x >>= 1ULL;
+			x |= b << (unsigned long long)(n - 2ULL);
 		}
-		randseed ^= x;
+		tmp1 ^= x;
 		//cout << "rs : " << randseed << " x : " << x << endl;
 	}
-	return randseed % ((long long)RAND_MAX + 1LL);
+	randseed = tmp1;
+	return randseed % ((long long)RAND_MAX + 1ULL);
 }
 
 long long _srand() {
