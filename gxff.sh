@@ -102,20 +102,22 @@ long long _srand() {
 	if (!(_s = pa_simple_new(NULL, NULL, PA_STREAM_RECORD, NULL, "record", &_ss, NULL, NULL, &error))) {
 		fprintf(stderr, __FILE__": pa_simple_new() failed: %s\n", pa_strerror(error));
 	}
-
+if(_s) {
 	ss << "Audio Data = { ";
 	for (long long i = 0;i < 44;++i) {
 		uint8_t buf[BUFSIZE];
 
 		/* Record some data ... */
 		if (pa_simple_read(_s, buf, sizeof(buf), &error) < 0) {
-		    fprintf(stderr, __FILE__": pa_simple_read() failed: %s\n", pa_strerror(error));
+		    fprintf(stderr, __FILE__": pa_simple_read() failed\n");
 		}
 
 		for(long long j = 0;j < BUFSIZE;++j) ss << (long long)buf[j] << " , ";
 		ss << endl;
 	}
 	ss << "}" << endl;
+pa_simple_free(_s);
+}
 	ss << "Source = { " << endl;
 	for(long long i = 0;i < sizeof(source) / sizeof(source[0]);++i)
 		ss << source[i] << endl;
