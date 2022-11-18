@@ -43,6 +43,15 @@ struct Instrument {
 		for(long long i = 0;i < m;++i) if(r1[i] < min) min = r1[i]; 
 		for(long long i = 0;i < m;++i) r1[i] = 2 * ((r1[i] - min) / (max - min) - 0.5);
 
+		int m1 = 0;
+		int p1 = 0;
+		for(int i = 0;i < m;++i) if(r1[i] == 1) p1 = i;
+		for(int i = 0;i < m;++i) if(r1[i] == -1) m1 = i;
+		int m2 = (p1 + m / 2) % m;
+		float tmp = r1[m2];
+		r1[m2] = r1[m1];
+		r1[m1] = tmp;
+
 		const long long n = sizeof(rands) / sizeof(*rands) / m;
 		for(long long i = 0;i < sizeof(rands) / sizeof(*rands);++i) {
 			long long j = i / n;
@@ -50,7 +59,7 @@ struct Instrument {
 			rands[i] = (k * r1[j + 1] / n) + ((n - k) * r1[j] / n);
 		}
 
-		for(long long i = 0;i < 30;++i) cout << rands[i * 44100 / m / 10] << " ";
+		for(long long i = 0;i < m;++i) cout << r1[i] << " ";
 		cout << endl << endl << "********************" << endl << endl;
 	}
 	
