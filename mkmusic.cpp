@@ -29,7 +29,7 @@ struct Instrument {
 		this->reverb = reverb;
 		a = 0.5 * (float)_rand() / (float)RAND_MAX + 0.5;
 		b = 0.5 * (float)_rand() / (float)RAND_MAX;
-		c = (float)_rand() / (float)RAND_MAX;
+		c = 0.5 * (float)_rand() / (float)RAND_MAX;
 		left = (float)_rand() / (float)RAND_MAX;
 		right = 1.0 - left;
 		
@@ -64,8 +64,8 @@ struct Instrument {
 		
 		for(long long i = 0;i < length;++i) {
 //			xs[i] = c * (rands[j % (sizeof(rands) / sizeof(*rands) - 100)] * b + 1.0 - b) * sin(x * i) + (1 - c) * sin(x * i);
-			xs[i] = 
-				rands[(unsigned int)round(128 * i * y) % (sizeof(rands) / sizeof(*rands) - 100)];
+			xs[i] = c * rands[(unsigned int)round(128 * i * y) % (sizeof(rands) / sizeof(*rands) - 100)] + sin(i * x);
+			xs[i] /= c + 1;
 			if(reverb) xs[i] *= cos(a * 0.1 * z * i);
 			xs[i] *= atan(10 * (length - i) / (float)sampleRate) / M_PI_2;
 			xs[i] *= atan(20 * (i) / (float)sampleRate) / M_PI_2;
