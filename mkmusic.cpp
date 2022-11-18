@@ -26,12 +26,12 @@ struct Instrument {
 	
 	Instrument(bool reverb) {
 		this->reverb = reverb;
-		a = 0.15 * (float)_rand() / (float)RAND_MAX + 0.85;
-		b = 0.15 * (float)_rand() / (float)RAND_MAX;
+		a = 0.5 * (float)_rand() / (float)RAND_MAX + 0.5;
+		b = 0.5 * (float)_rand() / (float)RAND_MAX;
 		left = (float)_rand() / (float)RAND_MAX;
 		right = 1.0 - left;
 		
-		const long long m = 32;
+		const long long m = 8;
 		float r1[m];
 		for(long long i = 0;i < m;++i) r1[i] = (float)_rand() / (float)RAND_MAX - 0.5;
 		
@@ -41,18 +41,6 @@ struct Instrument {
 		for(long long i = 0;i < m;++i) if(r1[i] < min) min = r1[i]; 
 		for(long long i = 0;i < m;++i) r1[i] = 2 * ((r1[i] - min) / (max - min) - 0.5);
 
-		for(long long k = 0;k < 0;++k) {
-			float r2[m];
-			for(long long i = 0;i < m;++i) {
-				r2[i] = 0;	
-				for(long long j = 0;j < m;++j) r2[i] += r1[i] * r1[m - j - 1];
-			}
-
-			float max = 0;
-			for(long long i = 0;i < m;++i) if(abs(r2[i]) > max) max = abs(r2[i]); 
-			for(long long i = 0;i < m;++i) r1[i] = r2[i] / max;
-		}
-
 		const long long n = sizeof(rands) / sizeof(*rands) / m;
 		for(long long i = 0;i < sizeof(rands) / sizeof(*rands);++i) {
 			long long j = i / n;
@@ -60,23 +48,24 @@ struct Instrument {
 			rands[i] = (k * r1[j + 1] / n) + ((n - k) * r1[j] / n);
 		}
 
-		for(long long i = 0;i < m;++i) cout << r1[i] << " ";
+		for(long long i = 0;i < 30;++i) cout << rands[i * 44100 / m / 10] << " ";
 		cout << endl << endl << "********************" << endl << endl;
 	}
 	
 	void render(float vol,long long tone,float *buffers[2],long long offset,long long length) {
 		float y = pow(2.0,tone / (float)TONES_PER_OCTAVE);
-		float z = 441.0 / sampleRate * M_PI;
+		float z = 440.0 / sampleRate * M_PI;
 		float x = z * y;
 	
 		float xs[length];
 		for(long long i = 0;i < length;++i) xs[i] = 0;
 		
 		for(long long i = 0;i < length;++i) {
-			long long j = (long long)round(32 * i * y * sizeof(rands) / sizeof(*rands) / length);
-			xs[i] = (rands[j % (sizeof(rands) / sizeof(*rands))] * b + 1.0 - b) + sin(x*i);
-			if(reverb) xs[i] *= cos(a * 0.05 * z * i);
-			xs[i] *= atan(2 * (length - i));
+			long long j = (long long)round(4 * i * y * sizeof(rands) / sizeof(*rands) / sampleRate);
+			xs[i] = (rands[j % (sizeof(rands) / sizeof(*rands) - 100)] * b + 1.0 - b) * sin(x * i) + sin(x * i);
+			if(reverb) xs[i] *= cos(a * 0.025 * z * i);
+			xs[i] *= atan(10 * (length - i) / (float)sampleRate) / M_PI_2;
+			xs[i] *= atan(20 * (i) / (float)sampleRate) / M_PI_2;
 		}
 		
 		for(long long i = 0;i < length && i + offset < songLength;++i) {
@@ -233,9 +222,9 @@ int main() {
 	BPM = 90 + (_rand() % 10);
 
 
-	Pattern *pats[4];
-	Pattern *pats2[4];
-	Melody mels[6];
+	Pattern *pats[3];
+	Pattern *pats2[3];
+	Melody mels[2];
 	long long k = 0;
 
 	for(long long j = 0;j < sizeof(pats) / sizeof(pats[0]);++j)
@@ -246,15 +235,15 @@ int main() {
 
 	for(long long i = 0;i < songLength;i += sampleRate * 60 / BPM / 4) {
 		for(long long j = 0;j < sizeof(pats) / sizeof(pats[0]);++j)
-			if(_rand() % 100 < 20 )
+			if(_rand() % 100 < 100 * sizeof(pats[0]) / sizeof(pats))
 				pats[j]->render(buffers,i + _rand() % 1000,sampleRate / 10);
 
 		for(long long j = 0;j < sizeof(pats2) / sizeof(pats2[0]);++j)
-			if(_rand() % 100 < 20 )
-				pats2[j]->render(buffers,i + _rand() % 1000,sampleRate / 5);
+			if(_rand() % 100 < 100 * sizeof(pats2[0]) / sizeof(pats2))
+				pats2[j]->render(buffers,i + _rand() % 1000,sampleRate / 10);
 
 		for(long long j = 0;j < sizeof(mels) / sizeof(mels[0]);++j)
-			if(_rand() % 100 < 40 / pow(j + 1,0.5))
+			if(_rand() % 100 < 100 * sizeof(mels[0]) / sizeof(mels))
 				mels[j].render(buffers,i + _rand() % 1000,1.0);
 
 		long long k2 = i / sampleRate / 10;
@@ -266,11 +255,9 @@ int main() {
 	
 	int16_t d;
 	for (long long i = 0; i < songLength; ++i) {
-		d = buffers[0][i] * 1000.0;	
+		d = buffers[0][i] * 5000.0;	
 		out.write(reinterpret_cast<char *>(&d), sizeof(int16_t));
-	//}
-	//for (long long i = 0; i < songLength; ++i) {
-		d = buffers[1][i] * 1000.0;	
+		d = buffers[1][i] * 5000.0;	
 		out.write(reinterpret_cast<char *>(&d), sizeof(int16_t));
 	}
 
