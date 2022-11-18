@@ -8,7 +8,7 @@ extern "C" { long long _srand(); }
 using namespace std;
 
 const long long sampleRate = 44100;
-const long long songLength = sampleRate * 120;
+const long long songLength = sampleRate * 60;
 
 inline float mypow(float x,float y) {
 	return pow(abs(x),y) * (x < 0 ? -1 : 1);
@@ -29,7 +29,7 @@ struct Instrument {
 		this->reverb = reverb;
 		a = 0.5 * (float)_rand() / (float)RAND_MAX + 0.5;
 		b = 0.5 * (float)_rand() / (float)RAND_MAX;
-		c = 0.5 * (float)_rand() / (float)RAND_MAX;
+		c = (float)_rand() / (float)RAND_MAX;
 		left = (float)_rand() / (float)RAND_MAX;
 		right = 1.0 - left;
 		
@@ -63,8 +63,9 @@ struct Instrument {
 		for(long long i = 0;i < length;++i) xs[i] = 0;
 		
 		for(long long i = 0;i < length;++i) {
-			long long j = (long long)round(4 * i * y * sizeof(rands) / sizeof(*rands) / sampleRate);
-			xs[i] = c * (rands[j % (sizeof(rands) / sizeof(*rands) - 100)] * b + 1.0 - b) * sin(x * i) + (1 - c) * sin(x * i);
+//			xs[i] = c * (rands[j % (sizeof(rands) / sizeof(*rands) - 100)] * b + 1.0 - b) * sin(x * i) + (1 - c) * sin(x * i);
+			xs[i] = 
+				c * rands[(unsigned int)round(128 * i * y) % (sizeof(rands) / sizeof(*rands) - 100)] + (1 - c) * sin(i * x);
 			if(reverb) xs[i] *= cos(a * 0.025 * z * i);
 			xs[i] *= atan(10 * (length - i) / (float)sampleRate) / M_PI_2;
 			xs[i] *= atan(20 * (i) / (float)sampleRate) / M_PI_2;
@@ -226,7 +227,7 @@ int main() {
 
 	Pattern *pats[3];
 	Pattern *pats2[3];
-	Melody mels[2];
+	Melody mels[3];
 	long long k = 0;
 
 	for(long long j = 0;j < sizeof(pats) / sizeof(pats[0]);++j)
@@ -234,6 +235,8 @@ int main() {
 
 	for(long long j = 0;j < sizeof(pats2) / sizeof(pats2[0]);++j)
 		pats2[j] = new Pattern(2 * TONES_PER_OCTAVE);
+
+	//for(int i = 0;i < 40;++i) cout << ((float)_rand() / (float)RAND_MAX) << endl;
 
 	for(long long i = 0;i < songLength;i += sampleRate * 60 / BPM / 4) {
 		for(long long j = 0;j < sizeof(pats) / sizeof(pats[0]);++j)
