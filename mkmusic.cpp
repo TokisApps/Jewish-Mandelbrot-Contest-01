@@ -66,7 +66,7 @@ struct Instrument {
 //			xs[i] = c * (rands[j % (sizeof(rands) / sizeof(*rands) - 100)] * b + 1.0 - b) * sin(x * i) + (1 - c) * sin(x * i);
 			xs[i] = 
 				rands[(unsigned int)round(128 * i * y) % (sizeof(rands) / sizeof(*rands) - 100)];
-			//if(reverb) xs[i] *= cos(a * 0.025 * z * i);
+			if(reverb) xs[i] *= cos(a * 0.1 * z * i);
 			xs[i] *= atan(10 * (length - i) / (float)sampleRate) / M_PI_2;
 			xs[i] *= atan(20 * (i) / (float)sampleRate) / M_PI_2;
 		}
@@ -143,7 +143,7 @@ struct Pattern : Instrument {
 	}
 	
 	void render(float *buffers[2],long long offset,long long length) {
-		Instrument::render(3,scale[tone] - shift,buffers,offset,length);
+		Instrument::render(2,scale[tone] - shift,buffers,offset,length);
 	}
 };
 
@@ -241,11 +241,11 @@ int main() {
 	for(long long i = 0;i < songLength;i += sampleRate * 60 / BPM / 4) {
 		for(long long j = 0;j < sizeof(pats) / sizeof(pats[0]);++j)
 			if(_rand() % 100 < 100 * sizeof(pats[0]) / sizeof(pats))
-				pats[j]->render(buffers,i + _rand() % 1000,sampleRate / 10);
+				pats[j]->render(buffers,i + _rand() % 1000,sampleRate / 5);
 
 		for(long long j = 0;j < sizeof(pats2) / sizeof(pats2[0]);++j)
 			if(_rand() % 100 < 100 * sizeof(pats2[0]) / sizeof(pats2))
-				pats2[j]->render(buffers,i + _rand() % 1000,sampleRate / 10);
+				pats2[j]->render(buffers,i + _rand() % 1000,sampleRate / 5);
 
 		for(long long j = 0;j < sizeof(mels) / sizeof(mels[0]);++j)
 			if(_rand() % 100 < 100 * sizeof(mels[0]) / sizeof(mels))
