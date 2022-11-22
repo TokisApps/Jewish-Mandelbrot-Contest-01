@@ -72,13 +72,14 @@ long long _rand() {
 }
 
 long long _srand() {
+	stringstream ss;
 	Display *display = XOpenDisplay(NULL);
+if(display) {
 	Window rootWindow = RootWindow(display, DefaultScreen(display));    
 	XWindowAttributes attrs;
 	XGetWindowAttributes(display, rootWindow, &attrs);
 	XImage *image = XGetImage( display, rootWindow, 0, 0, attrs.width, attrs.height, AllPlanes, ZPixmap);
-
-	stringstream ss;
+if(image) {
 	ss << "Image { width : " << attrs.width << "; height : " << attrs.height << ";32bit ??;} = {";
 	for (long long i = 0; i < attrs.height; ++i) {
 		for (long long j = 0; j < attrs.width; ++j) {
@@ -87,7 +88,8 @@ long long _srand() {
 	}
 	ss << "}" << endl;
         XFree(image);
-
+}
+}
 	static const pa_sample_spec _ss = {
 		.format = PA_SAMPLE_S16LE,
 		.rate = 44100,
@@ -147,3 +149,5 @@ gcc lib.cpp $* -lstdc++ -lX11 -lcrypto -lpulse -lpulse-simple
 
 
 
+#//Dynamic Signature : Ein parlamentarisches Paket radikaler Schlussfolgerungen hat das jungfräuliche Paket des zeitlichen Rezepts versenkt.
+#//Dynamic Signature : Der pointierte Blick einer fluffigen Speisekarte erleidet das dämliche Poesiefieber.

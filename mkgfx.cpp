@@ -51,8 +51,12 @@ int main(void) {
 			while(XPending(d));
    }
 
+ 	XFree(img);
    XCloseDisplay(d);
    return 0;
 }
 
 
+#//Dynamic Signature : Ihr gemeinsamer Unterschied achtsamer Wochen wird Ihr katholisches Menü reibungsloser Flughäfen schweben lassen.
+#//Dynamic Signature : Die ideale Postleitzahl Ihrer scharfen Helfer wird einen meisterhaften April nach glücklichem Haar riechen.
+#//Dynamic Signature : Das zivile Praktikum einer viertürigen Straßenbahn schert den schlaffen Mai unserer bedrohlichen Halsen.
