@@ -1,0 +1,109 @@
+<html>
+<head>
+    <script src="complex.min.js"></script>
+</head>
+<body>
+    <canvas id="xy" width=200 height=200 style="width:100%;height:100%;"></canvas>
+    
+    <script>
+        var cv = document.getElementById("xy");
+        var ctx = cv.getContext("2d");
+        var c = new Complex(-0.00,0.00);
+        
+        window.setInterval(() => {
+        var mxmin = -10;
+        var mxmax = 10;
+        var mymin = -10;
+        var mymax = 10;
+        var summin = 100000;
+        var summax = -100000;
+        
+        var data = ctx.getImageData(0,0,cv.width,cv.height);
+        var dat = data.data;
+        
+        var args = [];
+        for(var x = 0;x < cv.width;++x) {
+            var mx = x * (mxmax - mxmin) / cv.width + mxmin;
+            var arg = [];
+            for(var y = 0;y < cv.height;++y) {
+                var my = y * (mymax - mymin) / cv.height + mymin;
+                
+                var sum = 0;
+                var z = new Complex(mx,my);
+                
+                for(var i = 0;i < 100;++i) {
+                    var z2 = z.exp().add(c);
+                    if(z2.isFinite()) sum += Math.abs(z.arg() - z2.arg());
+                    z = z2;
+                }
+                
+                if(sum < summin) summin = sum;
+                if(sum > summax) summax = sum;
+                
+                arg.push(sum);
+            }
+            args.push(arg);
+        }
+        
+                console.log(summin);
+                
+                console.log(summax);
+                
+        for(var i = 0;i < args.length;++i)
+        for(var j = 0;j < args[i].length;++j) {
+            dat[(j + i * args[i].length) * 4] = 250 * (args[i][j] - summin) / (summax - summin);
+            dat[(j + i * args[i].length) * 4 + 3] = 250;
+        }
+        
+        ctx.putImageData(data,0,0);
+        console.log(data);
+        
+        c.re += 0.01 + (Math.random() - 0.5);
+        c.im += 0.01 + (Math.random() - 0.5);
+        
+        },1000);
+        
+        /*
+        var x = new Complex(-1,1);
+        var c = new Complex(-1,1);
+        var minx = 100000;
+        var miny = 100000;
+        var maxx = -100000;
+        var maxy = -100000;
+        
+        var xs = [];
+        for(var i = 0;i < 100;++i) {
+            x = x.exp().add(c);
+            xs.push(x);
+            if(x.re < minx) minx = x.re;
+            if(x.re > maxx) maxx = x.re;
+            if(x.im < miny) miny = x.im;
+            if(x.im > maxy) maxy = x.im;
+        }
+        
+        ctx.fillStyle = "black";
+        ctx.fillRect(0,0,cv.width,cv.height);
+        ctx.strokeStyle = "white";
+        
+        ctx.beginPath();
+        ctx.moveTo(
+            cv.width * (xs[0].re - minx) / (maxx - minx),
+            cv.height * (xs[0].im - miny) / (maxy - miny)
+        );
+        
+        xs.forEach((x) => {
+            ctx.lineTo(
+                cv.width * (x.re - minx) / (maxx - minx),
+                cv.height * (x.im - miny) / (maxy - miny)
+            );
+            console.log(x);
+        });
+        
+        ctx.stroke();
+        */
+    </script>
+</body>
+
+
+</html>
+
