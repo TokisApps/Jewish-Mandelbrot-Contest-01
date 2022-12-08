@@ -19,8 +19,8 @@
         var mxmax = 10;
         var mymin = -10;
         var mymax = 10;
-        var summin = 100000;
-        var summax = -100000;
+        var summin = 10000000;
+        var summax = -10000000;
         
         var data = ctx.getImageData(0,0,cv.width,cv.height);
         var dat = data.data;
@@ -35,10 +35,10 @@
                 var sum = 0;
                 var z = new Complex(mx,my);
                 
-                for(var i = 0;i < 100;++i) {
+                for(var i = 0;i < 50;++i) {
                     var z2 = z.exp().add(c);
                     if(!Number.isNaN(z2)) {
-                    sum += Math.abs(z.arg() - z2.arg());
+                    sum += 0.01 * Math.abs(z.arg() - z2.arg());
                     z = z2;
                     }
                 }
