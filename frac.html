@@ -3,6 +3,8 @@
     <script src="complex.min.js"></script>
 </head>
 <body>
+    <input id="ab" type="checkbox">Animate<br>
+    
     <canvas id="xy" width=200 height=200 style="width:100%;height:100%;"></canvas>
     
     <script>
@@ -11,6 +13,8 @@
         var c = new Complex(-0.00,0.00);
         
         window.setInterval(() => {
+        if(!document.getElementById("ab").checked) return;
+        
         var mxmin = -10;
         var mxmax = 10;
         var mymin = -10;
@@ -33,13 +37,15 @@
                 
                 for(var i = 0;i < 100;++i) {
                     var z2 = z.exp().add(c);
-                    if(z2.isFinite()) sum += Math.abs(z.arg() - z2.arg());
+                    sum += Math.abs(z.arg() - z2.arg());
                     z = z2;
                 }
                 
+                if(!Number.isNaN(sum)) {
+                
                 if(sum < summin) summin = sum;
                 if(sum > summax) summax = sum;
-                
+                }
                 arg.push(sum);
             }
             args.push(arg);
@@ -51,7 +57,14 @@
                 
         for(var i = 0;i < args.length;++i)
         for(var j = 0;j < args[i].length;++j) {
-            dat[(j + i * args[i].length) * 4] = 250 * (args[i][j] - summin) / (summax - summin);
+            var t;
+            if(!Number.isNaN(sum)) 
+                t = (args[i][j] - summin) / (summax - summin);
+            else
+                t = 0;
+            dat[(j + i * args[i].length) * 4 + 0] = 120.0 * (Math.sin(1 * t + 3) + 1);
+            dat[(j + i * args[i].length) * 4 + 1] = 120.0 * (Math.sin(2 * t + 2) + 1);
+            dat[(j + i * args[i].length) * 4 + 2] = 120.0 * (Math.sin(3 * t + 1) + 1);
             dat[(j + i * args[i].length) * 4 + 3] = 250;
         }
         
